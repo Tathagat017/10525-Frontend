@@ -1,20 +1,24 @@
 import { Button, Group, Modal, Select, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useQuery } from "@tanstack/react-query";
-import { useStore } from "../../hooks/use-store";
-import { ChoreFrequency, ChorePayload } from "../../types/chore";
+import { observer } from "mobx-react-lite";
 import { Types } from "mongoose";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useStore } from "../../hooks/use-store";
 import "../../styles/date-picker.css";
-import { observer } from "mobx-react-lite";
+import { ChoreFrequency, ChorePayload } from "../../types/chore";
+import { User } from "../../types/user";
 
 const CreateChoreModal = observer(function CreateChoreModal({
   householdId,
+  members,
+  householdOwner,
 }: {
   householdId: string;
+  members: User[];
+  householdOwner: User;
 }) {
-  const { uiViewStore, authStore, choreStore } = useStore();
+  const { uiViewStore, choreStore } = useStore();
 
   const form = useForm<ChorePayload>({
     initialValues: {
@@ -27,13 +31,6 @@ const CreateChoreModal = observer(function CreateChoreModal({
     validate: {
       name: (value) => (!value ? "Name is required" : null),
       frequency: (value) => (!value ? "Frequency is required" : null),
-    },
-  });
-
-  const { data: users } = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      return await authStore.getUsers();
     },
   });
 
@@ -57,8 +54,16 @@ const CreateChoreModal = observer(function CreateChoreModal({
     { value: "monthly", label: "Monthly" },
   ];
 
+  if (householdOwner) {
+    const houseHoldOwnerPresent = members.find(
+      (mem) => mem._id.toString() === householdOwner._id.toString()
+    );
+    if (!houseHoldOwnerPresent) {
+      members.push(householdOwner);
+    }
+  }
   const userOptions =
-    users?.map((user) => ({
+    members?.map((user) => ({
       value: user._id.toString(),
       label: user.name,
     })) || [];

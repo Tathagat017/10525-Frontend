@@ -25,7 +25,7 @@ const HouseholdComponent = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState<string>("chores");
 
-  const { householdStore } = useStore();
+  const { householdStore, authStore } = useStore();
   const { data: household } = useQuery({
     queryKey: ["household", id],
     queryFn: async () => {
@@ -35,6 +35,17 @@ const HouseholdComponent = () => {
       return result;
     },
   });
+
+  const { data: users } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      return await authStore.getUsers();
+    },
+  });
+
+  const householdOwner = users?.find(
+    (user) => user._id.toString() == household?.owner?.toString()
+  );
 
   console.log(id);
   return (
@@ -92,11 +103,18 @@ const HouseholdComponent = () => {
           </Tabs.List>
 
           <Tabs.Panel value="chores" pt="md">
-            <ChoresTab householdId={id as string} />
+            <ChoresTab
+              householdId={id as string}
+              householdOwner={householdOwner!}
+              members={household?.members as unknown as User[]}
+            />
           </Tabs.Panel>
 
           <Tabs.Panel value="expenses" pt="md">
-            <ExpenseTab />
+            <ExpenseTab
+              members={household?.members as unknown as User[]}
+              householdOwner={householdOwner!}
+            />
           </Tabs.Panel>
 
           <Tabs.Panel value="members" pt="md">

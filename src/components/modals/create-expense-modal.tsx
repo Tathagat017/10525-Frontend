@@ -1,36 +1,40 @@
+import { faEquals } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  ActionIcon,
   Button,
+  Checkbox,
   Group,
   Modal,
   MultiSelect,
   NumberInput,
+  Paper,
   Select,
   Stack,
-  TextInput,
   Text,
-  Paper,
-  ActionIcon,
-  Checkbox,
+  TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useQuery } from "@tanstack/react-query";
-import { useStore } from "../../hooks/use-store";
-import { ExpensePayload, ExpenseParticipant } from "../../types/expense";
+import { observer } from "mobx-react-lite";
 import { Types } from "mongoose";
+import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useStore } from "../../hooks/use-store";
 import "../../styles/date-picker.css";
-import { observer } from "mobx-react-lite";
-import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEquals } from "@fortawesome/free-solid-svg-icons";
+import { ExpenseParticipant, ExpensePayload } from "../../types/expense";
+import { User } from "../../types/user";
 
 const CreateExpenseModal = observer(function CreateExpenseModal({
   householdId,
+  members,
+  householdOwner,
 }: {
   householdId: string;
+  members: User[];
+  householdOwner: User;
 }) {
-  const { uiViewStore, authStore, householdStore } = useStore();
+  const { uiViewStore, householdStore } = useStore();
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
     []
   );
@@ -53,13 +57,6 @@ const CreateExpenseModal = observer(function CreateExpenseModal({
       name: (value) => (!value ? "Name is required" : null),
       amount: (value) => (value <= 0 ? "Amount must be greater than 0" : null),
       payer: (value) => (!value ? "Payer is required" : null),
-    },
-  });
-
-  const { data: users } = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      return await authStore.getUsers();
     },
   });
 
@@ -96,24 +93,19 @@ const CreateExpenseModal = observer(function CreateExpenseModal({
       console.error("Error creating expense:", error);
     }
   };
-
-  const userOptions = [
-    ...(users?.map((user) => ({
+  if (householdOwner) {
+    const houseHoldOwnerPresent = members.find(
+      (mem) => mem._id.toString() === householdOwner._id.toString()
+    );
+    if (!houseHoldOwnerPresent) {
+      members.push(householdOwner);
+    }
+  }
+  const userOptions =
+    members?.map((user) => ({
       value: user._id.toString(),
       label: user.name,
-    })) || []),
-    ...(authStore.User &&
-    !users?.some(
-      (user) => user._id.toString() === authStore.User?._id.toString()
-    )
-      ? [
-          {
-            value: authStore.User._id.toString(),
-            label: authStore.User.name,
-          },
-        ]
-      : []),
-  ];
+    })) || [];
 
   const handleParticipantChange = (selectedUserIds: string[]) => {
     setSelectedParticipants(selectedUserIds);

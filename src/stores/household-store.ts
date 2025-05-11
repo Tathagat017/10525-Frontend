@@ -134,6 +134,9 @@ export class HouseHoldStore {
       );
       runInAction(() => {
         this.queryClient.invalidateQueries({ queryKey: ["expenses"] });
+        this.queryClient.invalidateQueries({ queryKey: ["household"] });
+        this.queryClient.invalidateQueries({ queryKey: ["balanaces"] });
+        this.queryClient.invalidateQueries({ queryKey: ["settle-up"] });
       });
       return data;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
