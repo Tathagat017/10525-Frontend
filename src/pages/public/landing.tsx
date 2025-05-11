@@ -75,7 +75,7 @@ export default function LandingPage() {
                     fontWeight: 800,
                   })}
                 >
-                  Welcome to Roommate 🏡
+                  Welcome to RentMate 🏡
                 </Title>
                 <Text
                   size="xl"
