@@ -7,6 +7,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Badge,
+  Box,
   Button,
   Card,
   Divider,
@@ -26,6 +27,15 @@ import { useParams } from "react-router-dom";
 import { useStore } from "../../hooks/use-store";
 import { ExpenseBalance, SettleUpSuggestion } from "../../types/expense";
 import CreateExpenseModal from "../modals/create-expense-modal";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+const COLORS = ["#4caf50", "#f44336", "#2196f3", "#ff9800", "#9c27b0"];
 
 const ExpenseTab = observer(() => {
   const { householdStore, authStore, uiViewStore } = useStore();
@@ -152,6 +162,42 @@ const ExpenseTab = observer(() => {
           </ScrollArea>
           <Divider label="Balances" labelPosition="center" my="sm" />
           <Stack spacing="xs">
+            {balances && (
+              <Box mt="md" style={{ height: 250 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(balances).map(([userId, amt]) => {
+                        const user = users?.find(
+                          (u) => u._id.toString() == userId
+                        );
+                        let amount: string | number = Number(amt).toFixed(2);
+                        amount = Math.abs(Number(amount));
+                        return {
+                          name: user?.name ?? "Unknown",
+                          value: amount,
+                        };
+                      })}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={50}
+                      label
+                    >
+                      {Object.keys(balances).map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+            )}
             {balances &&
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               Object.entries(balances).map(([user, amt]: any) => (

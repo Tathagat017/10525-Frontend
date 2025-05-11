@@ -19,6 +19,7 @@ import SettingsTab from "../household-tabs/settings-tab";
 import { useStore } from "../../hooks/use-store";
 import { useQuery } from "@tanstack/react-query";
 import { Types } from "mongoose";
+import { User } from "../../types/user";
 
 const HouseholdComponent = () => {
   const { id } = useParams();
@@ -100,10 +101,12 @@ const HouseholdComponent = () => {
 
           <Tabs.Panel value="members" pt="md">
             <MemberTab
-              members={household?.members as Types.ObjectId[]}
-              ownerId={household?.owner as Types.ObjectId}
+              members={household?.members as unknown as User[]}
+              ownerId={household?.owner as unknown as Types.ObjectId}
               inviteCode={household?.inviteCode as string}
-              pendingInvites={household?.pendingInvites as Types.ObjectId[]}
+              pendingInvites={
+                household?.pendingInvites as unknown as Types.ObjectId[]
+              }
               householdId={id as unknown as Types.ObjectId}
             />
           </Tabs.Panel>
