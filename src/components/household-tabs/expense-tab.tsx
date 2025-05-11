@@ -3,6 +3,8 @@ import {
   faMoneyBillWave,
   faPlus,
   faUser,
+  faCheck,
+  faMoneyBill,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -36,6 +38,7 @@ import {
   Legend,
 } from "recharts";
 import { User } from "../../types/user";
+import { notifications } from "@mantine/notifications";
 const COLORS = ["#4caf50", "#f44336", "#2196f3", "#ff9800", "#9c27b0"];
 
 const ExpenseTab = observer(
@@ -71,7 +74,7 @@ const ExpenseTab = observer(
     });
 
     const { isLoading: loadingSuggestions } = useQuery({
-      queryKey: ["settle-up", id],
+      queryKey: ["settle-up"],
       queryFn: async () => {
         const result = await householdStore.getSettleUpSuggestions(
           id! as unknown as Types.ObjectId
@@ -110,6 +113,36 @@ const ExpenseTab = observer(
       uiViewStore.toggleCreateExpenseModal(true);
     };
 
+    const handlePayShare = async (
+      expenseId: string,
+      _userId: string,
+      _share: number,
+      amount: number
+    ) => {
+      try {
+        const result = await householdStore.payShare(
+          expenseId as unknown as Types.ObjectId,
+          amount
+        );
+        if (result) {
+          notifications.show({
+            title: "Payment marked as paid",
+            message: `You have paid ${amount.toFixed(2)} for ${
+              expenses?.find((exp) => exp._id.toString() === expenseId)?.name
+            }`,
+            color: "green",
+          });
+        }
+      } catch (error) {
+        console.error("Error paying share:", error);
+        notifications.show({
+          title: "Error paying share",
+          message: "Please try again",
+          color: "red",
+        });
+      }
+    };
+
     return (
       <Stack>
         <Group position="apart">
@@ -137,7 +170,15 @@ const ExpenseTab = observer(
                     withBorder
                   >
                     <Group position="apart">
-                      <Text weight={500}>{exp.name}</Text>
+                      <Group>
+                        <Text weight={500}>{exp.name}</Text>
+                        {exp.isCompletelyPaid && (
+                          <Badge color="green" size="sm">
+                            <FontAwesomeIcon icon={faCheck} className="me-1" />
+                            Expense Paid by all participants
+                          </Badge>
+                        )}
+                      </Group>
                       <Badge color="blue">${exp.amount.toFixed(2)}</Badge>
                     </Group>
                     <Text size="sm" color="dimmed" mt={4}>
@@ -145,19 +186,52 @@ const ExpenseTab = observer(
                       by:{" "}
                       {users?.find((user) => user._id == exp.payer._id)?.name}
                     </Text>
-                    <Text size="xs" mt={2}>
-                      Participants:{" "}
-                      {exp.participants
-                        .map(
-                          (p) =>
-                            `${
-                              users?.find((user) => user._id == p.user._id)
-                                ?.name
-                            } (${Math.round(p.share * 100)}%)`
-                        )
-                        .join(", ")}
-                    </Text>
-                    <Text size="xs" color="dimmed">
+                    <Stack spacing="xs" mt="sm">
+                      {exp.participants.map((p) => {
+                        const user = users?.find(
+                          (user) => user._id == p.user._id
+                        );
+                        const shareAmount = exp.amount * p.share;
+                        const isPayer = p.user._id === exp.payer._id;
+                        return (
+                          <Group key={p.user._id.toString()} position="apart">
+                            <Text size="sm">
+                              {user?.name} (${shareAmount.toFixed(2)})
+                              {p.isPaid && (
+                                <Badge ml="xs" color="green" size="sm">
+                                  <FontAwesomeIcon
+                                    icon={faCheck}
+                                    className="me-1"
+                                  />
+                                  Paid
+                                </Badge>
+                              )}
+                            </Text>
+                            {!p.isPaid &&
+                              !isPayer &&
+                              p.user._id === authStore.user?._id && (
+                                <Button
+                                  size="xs"
+                                  leftIcon={
+                                    <FontAwesomeIcon icon={faMoneyBill} />
+                                  }
+                                  onClick={() =>
+                                    handlePayShare(
+                                      exp._id.toString(),
+                                      p.user._id.toString(),
+                                      p.share,
+                                      shareAmount
+                                    )
+                                  }
+                                >
+                                  Pay Share
+                                </Button>
+                              )}
+                          </Group>
+                        );
+                      })}
+                    </Stack>
+                    <Text size="xs" color="dimmed" mt="sm">
                       Date: {format(new Date(exp.date), "PP")}
                     </Text>
                   </Card>

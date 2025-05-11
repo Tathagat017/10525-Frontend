@@ -79,6 +79,8 @@ const CreateExpenseModal = observer(function CreateExpenseModal({
         return {
           user: new Types.ObjectId(userId),
           share,
+          isPaid: false,
+          amountPaid: 0,
         };
       });
 
@@ -88,6 +90,7 @@ const CreateExpenseModal = observer(function CreateExpenseModal({
       };
 
       await householdStore.createExpense(expenseData);
+
       handleClose();
     } catch (error) {
       console.error("Error creating expense:", error);
@@ -117,6 +120,8 @@ const CreateExpenseModal = observer(function CreateExpenseModal({
         (userId) => ({
           user: new Types.ObjectId(userId),
           share: equalShare,
+          isPaid: false,
+          amountPaid: 0,
         })
       );
       form.setFieldValue("participants", participants);
@@ -159,6 +164,8 @@ const CreateExpenseModal = observer(function CreateExpenseModal({
         (userId) => ({
           user: new Types.ObjectId(userId),
           share: equalShare,
+          isPaid: false,
+          amountPaid: 0,
         })
       );
       form.setFieldValue("participants", participants);

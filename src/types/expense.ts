@@ -3,6 +3,8 @@ import { Types } from "mongoose";
 export interface ExpenseParticipant {
   user: Types.ObjectId;
   share: number;
+  isPaid: boolean;
+  amountPaid: number;
 }
 
 export interface Expense {
@@ -15,6 +17,7 @@ export interface Expense {
   participants: ExpenseParticipant[];
   createdAt: Date;
   updatedAt: Date;
+  isCompletelyPaid: boolean;
 }
 
 export interface ExpensePayload {

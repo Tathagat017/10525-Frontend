@@ -135,7 +135,7 @@ export class HouseHoldStore {
       runInAction(() => {
         this.queryClient.invalidateQueries({ queryKey: ["expenses"] });
         this.queryClient.invalidateQueries({ queryKey: ["household"] });
-        this.queryClient.invalidateQueries({ queryKey: ["balanaces"] });
+        this.queryClient.invalidateQueries({ queryKey: ["balances"] });
         this.queryClient.invalidateQueries({ queryKey: ["settle-up"] });
       });
       return data;
@@ -386,6 +386,23 @@ export class HouseHoldStore {
         this.queryClient.invalidateQueries({ queryKey: ["users"] });
         this.queryClient.invalidateQueries({ queryKey: ["user"] });
       });
+      return data;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async payShare(expenseId: Types.ObjectId, amount: number) {
+    try {
+      if (!this.authHeaders) {
+        throw new Error("No auth headers available");
+      }
+      const { data } = await axios.post<{ success: boolean; expense: Expense }>(
+        `${this.baseUrl}/api/expenses/pay/${expenseId}`,
+        { amount },
+        this.authHeaders
+      );
       return data;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {

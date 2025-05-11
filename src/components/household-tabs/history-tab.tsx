@@ -78,7 +78,7 @@ const HistoryTab = observer(({ householdId }: HistoryTabProps) => {
         </div>
       ) : history.length > 0 ? (
         <Stack spacing="xs">
-          {history.map((entry: HistoryEntry, index: number) => (
+          {history.reverse().map((entry: HistoryEntry, index: number) => (
             <Paper key={index} p="md" withBorder>
               <Group position="apart">
                 <Stack spacing={0}>
