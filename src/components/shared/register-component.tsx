@@ -63,7 +63,7 @@ export const RegisterComponent = observer(() => {
   const [nameError, setNameError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const validateEmail = (email: string) =>
     !email
       ? "Email required"
@@ -108,6 +108,7 @@ export const RegisterComponent = observer(() => {
   };
 
   const handleRegister = async () => {
+    setIsLoading(true);
     const nameErr = validateName(name);
     const emailErr = validateEmail(email);
     const passErr = password.length < 8 ? "Password too short" : null;
@@ -141,6 +142,7 @@ export const RegisterComponent = observer(() => {
         color: "red",
       });
     }
+    setIsLoading(false);
   };
 
   return (
@@ -247,6 +249,7 @@ export const RegisterComponent = observer(() => {
             onClick={handleRegister}
             size="xs"
             variant="gradient"
+            loading={isLoading}
           >
             Register
           </Button>

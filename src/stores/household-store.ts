@@ -378,6 +378,11 @@ export class HouseHoldStore {
         { householdId },
         this.authHeaders
       );
+      runInAction(() => {
+        this.queryClient.invalidateQueries({ queryKey: ["household"] });
+        this.queryClient.invalidateQueries({ queryKey: ["users"] });
+        this.queryClient.invalidateQueries({ queryKey: ["user"] });
+      });
       return data;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {

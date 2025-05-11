@@ -1,17 +1,16 @@
 // pages/JoinHouseholdPage.tsx
-import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
 import { observer } from "mobx-react-lite";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { Button, Center, Loader, Stack, Text, Title } from "@mantine/core";
-import { useStore } from "../../hooks/use-store";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Button, Center, Loader, Stack, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { useStore } from "../../hooks/use-store";
 
 export const JoinHouseholdPage = observer(() => {
-  const [searchParams] = useSearchParams();
-  const code = searchParams.get("code");
+  const { inviteCode } = useParams();
   const { householdStore } = useStore();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
@@ -20,13 +19,13 @@ export const JoinHouseholdPage = observer(() => {
 
   useEffect(() => {
     const join = async () => {
-      if (!code) {
+      if (!inviteCode) {
         setStatus("error");
         return;
       }
 
       try {
-        await householdStore.joinHousehold(code);
+        await householdStore.joinHousehold(inviteCode);
         setStatus("success");
         notifications.show({
           title: "Household joined",
@@ -45,7 +44,7 @@ export const JoinHouseholdPage = observer(() => {
     };
 
     join();
-  }, [code, householdStore]);
+  }, [inviteCode, householdStore]);
 
   if (status === "loading") {
     return (

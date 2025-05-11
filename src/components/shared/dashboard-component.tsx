@@ -4,13 +4,13 @@ import NoHouseHoldDashboard from "./no-house-hold-dashboard";
 import HouseHoldCardListDashboard from "./household-card-list-dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "../../types/user";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader } from "@mantine/core";
 
 const DashboardComponent = observer(() => {
   const { authStore } = useStore();
   const [user, setUser] = useState<User | null>(null);
-
+  const [showNoHousehold, setShowNoHousehold] = useState(false);
   const { isLoading } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -22,6 +22,14 @@ const DashboardComponent = observer(() => {
       setUser(data);
     },
   });
+
+  useEffect(() => {
+    if (user?.households.length == 0) {
+      setShowNoHousehold(true);
+    } else {
+      setShowNoHousehold(false);
+    }
+  }, [user]);
 
   if (isLoading)
     return (
@@ -38,7 +46,7 @@ const DashboardComponent = observer(() => {
       </div>
     );
 
-  return user?.households.length == 0 ? (
+  return user?.households.length == 0 || showNoHousehold ? (
     <NoHouseHoldDashboard />
   ) : (
     <HouseHoldCardListDashboard />

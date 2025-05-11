@@ -58,7 +58,7 @@ export const LoginComponent = observer(function LoginComponent() {
 
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
+  const [isLoading, setIsLoading] = useState(false);
   const backgroundImage = getImage("login_background");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const from = (location.state as any)?.from?.pathname || "/dashboard";
@@ -76,6 +76,7 @@ export const LoginComponent = observer(function LoginComponent() {
   };
 
   const handleLogin = async () => {
+    setIsLoading(true);
     const emailErr = validateEmail(email);
     const passErr = validatePassword(password);
 
@@ -93,6 +94,7 @@ export const LoginComponent = observer(function LoginComponent() {
         message: `Welcome, ${success.name}!`,
         color: "green",
       });
+      setIsLoading(false);
       navigate(from, { replace: true });
     } else {
       notifications.show({
@@ -100,6 +102,7 @@ export const LoginComponent = observer(function LoginComponent() {
         message: "Invalid credentials",
         color: "red",
       });
+      setIsLoading(false);
     }
   };
 
@@ -132,7 +135,12 @@ export const LoginComponent = observer(function LoginComponent() {
             required
           />
 
-          <Button onClick={handleLogin} fullWidth variant="gradient">
+          <Button
+            loading={isLoading}
+            onClick={handleLogin}
+            fullWidth
+            variant="gradient"
+          >
             Login
           </Button>
 

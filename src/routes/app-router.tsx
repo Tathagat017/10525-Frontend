@@ -34,7 +34,7 @@ export const AppRouter: React.FC = () => (
           }
         >
           <Route
-            path="/join"
+            path="/join/:inviteCode"
             element={
               <AuthenticatedRoute>
                 <JoinHouseholdPage />

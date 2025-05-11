@@ -132,7 +132,7 @@ export const NavBar = observer(function NavBar() {
                   radius="xl"
                   size="md"
                   src={authStore.User?.profilePictureUrl || undefined}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: "pointer", maxHeight: "40px" }}
                 >
                   {authStore.User?.name?.charAt(0) || "U"}
                 </Avatar>
