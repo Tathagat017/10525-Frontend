@@ -3,7 +3,6 @@ import {
   Paper,
   PasswordInput,
   Stack,
-  Switch,
   Text,
   TextInput,
   Title,
@@ -12,7 +11,7 @@ import {
 import { notifications } from "@mantine/notifications";
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "../../hooks/use-store";
 import { getImage } from "../../utils/image-map";
 
@@ -20,12 +19,12 @@ const useStyles = createStyles((theme) => ({
   container: {
     display: "flex",
     width: "100vw",
-    height: "100vh",
+    height: "100%",
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
-    justifyContent: "flex-end",
-    alignItems: "flex-start",
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.spacing.xl,
   },
   loginPaper: {
@@ -49,8 +48,9 @@ const useStyles = createStyles((theme) => ({
 }));
 
 export const LoginComponent = observer(function LoginComponent() {
-  const { authStore, uiViewStore } = useStore();
+  const { authStore } = useStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const { classes, theme } = useStyles();
 
   const [email, setEmail] = useState("");
@@ -59,10 +59,9 @@ export const LoginComponent = observer(function LoginComponent() {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const userRole = uiViewStore.UserRoleForLogin;
-  const backgroundImage = getImage(
-    userRole === "founder" ? "login_founder" : "login_investor"
-  );
+  const backgroundImage = getImage("login_background");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const from = (location.state as any)?.from?.pathname || "/dashboard";
 
   const validateEmail = (value: string) => {
     if (!value) return "Email is required";
@@ -85,16 +84,16 @@ export const LoginComponent = observer(function LoginComponent() {
 
     if (emailErr || passErr) return;
 
-    const payload = { email, password, role: userRole };
+    const payload = { email, password };
     const success = await authStore.loginUser(payload);
 
     if (success) {
       notifications.show({
         title: "Login successful",
-        message: `Welcome, ${userRole}!`,
+        message: `Welcome, ${success.name}!`,
         color: "green",
       });
-      navigate(`/${userRole}/dashboard`);
+      navigate(from, { replace: true });
     } else {
       notifications.show({
         title: "Login failed",
@@ -112,7 +111,7 @@ export const LoginComponent = observer(function LoginComponent() {
       <Paper className={classes.loginPaper} radius="lg" shadow="md">
         <Stack spacing="md">
           <Title order={2} align="center">
-            {userRole === "founder" ? "Founder Login" : "Investor Login"}
+            {"Login to your account"}
           </Title>
 
           <TextInput
@@ -133,19 +132,6 @@ export const LoginComponent = observer(function LoginComponent() {
             required
           />
 
-          <div className={classes.switchWrapper}>
-            <Switch
-              checked={userRole === "founder"}
-              labelPosition="left"
-              onChange={(e) =>
-                uiViewStore.toggleUserRoleForLogin(
-                  e.currentTarget.checked ? "founder" : "investor"
-                )
-              }
-              label={`Login as ${"Founder"}`}
-            />
-          </div>
-
           <Button onClick={handleLogin} fullWidth variant="gradient">
             Login
           </Button>
@@ -157,10 +143,7 @@ export const LoginComponent = observer(function LoginComponent() {
               className={classes.linkText}
               onClick={() => navigate("/register")}
               style={{
-                color:
-                  userRole === "founder"
-                    ? theme.colors.gray[0]
-                    : theme.colors.blue[6],
+                color: theme.colors.blue[6],
               }}
             >
               Sign up here

@@ -1,16 +1,15 @@
-import LogoImage from "../assets/logo/logo.png";
-import LoginFounderImage from "../assets/images/login_founder.jpg";
-import LoginInvestorImage from "../assets/images/login_investor.jpg";
-import CreateStartupProfileBackgroundImage from "../assets/images/create_startup_background.jpg";
-import LandingPageBAckgroundImage from "../assets/images/landing_page_background.jpg";
+import LandingPageBAckgroundImage from "../assets/images/landing_page_background2.avif";
+import LoginBackgroundImage from "../assets/images/login_background.jpeg";
 import NotFoundImage from "../assets/images/not_found.webp";
+import RegisterBackgroundImage from "../assets/images/register_background.jpeg";
+import LogoImage from "../assets/logo/logo.jpg";
+import EmptyHouseHoldImage from "../assets/images/empty_household.png";
 
 export const ImageMap: { [key: string]: string } = {
   logo: LogoImage,
-  login_founder: LoginFounderImage,
-  login_investor: LoginInvestorImage,
-  create_startup_profile_background: CreateStartupProfileBackgroundImage,
-  investor_browse_background: LoginInvestorImage,
+  login_background: LoginBackgroundImage,
+  register_background: RegisterBackgroundImage,
+  empty_house_hold: EmptyHouseHoldImage,
   landing_background_image: LandingPageBAckgroundImage,
   not_found: NotFoundImage,
 };

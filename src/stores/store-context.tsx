@@ -2,17 +2,15 @@ import { createContext, ReactNode } from "react";
 import { AuthStore } from "./auth-store";
 import { UiViewStore } from "./ui-view-store";
 import { QueryClient } from "@tanstack/react-query";
-import { FounderStore } from "./founder-store";
-import { InvestmentOfferStore } from "./investment-offer-store";
-import { InventorStore } from "./inventor-store";
+import { HouseHoldStore } from "./household-store";
+import { ChoreStore } from "./chore-store";
 
 const queryClient = new QueryClient();
 
 export const store = {
   authStore: new AuthStore(queryClient),
-  founderStore: new FounderStore(queryClient),
-  investmentOfferStore: new InvestmentOfferStore(queryClient),
-  investerStore: new InventorStore(queryClient),
+  householdStore: new HouseHoldStore(queryClient),
+  choreStore: new ChoreStore(queryClient),
   uiViewStore: new UiViewStore(),
   queryClient,
 };

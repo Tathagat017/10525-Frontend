@@ -1,10 +1,15 @@
 import { QueryClient } from "@tanstack/react-query";
 import axios, { AxiosResponse } from "axios";
 import { makeAutoObservable, runInAction } from "mobx";
-import { User, UserRole } from "../types/user";
-import { LoginPayload, RegisterPayload } from "../types/auth";
-import { Founder } from "../types/founder";
-import { Investor } from "../types/investor";
+import {
+  User,
+  UserLoginPayload,
+  UserLoginResponse,
+  UserRegisterPayload,
+  UserRegisterResponse,
+  UserRole,
+} from "../types/user";
+import { Types } from "mongoose";
 
 export class AuthStore {
   token: string | null = localStorage.getItem("auth_token");
@@ -31,7 +36,7 @@ export class AuthStore {
     return this.token;
   }
 
-  get User(): Founder | Investor | null {
+  get User(): User | null {
     return this.user;
   }
 
@@ -39,7 +44,7 @@ export class AuthStore {
     return this.role;
   }
 
-  setAuth(token: string, user: User, role: UserRole) {
+  setAuth(token: string, user: User, role: UserRole | null) {
     runInAction(() => {
       this.token = token;
       this.user = user;
@@ -47,7 +52,7 @@ export class AuthStore {
       this.isAuthenticated = true;
       localStorage.setItem("auth_token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("user_role", role);
+      if (role) localStorage.setItem("user_role", role);
     });
   }
 
@@ -59,12 +64,24 @@ export class AuthStore {
     localStorage.clear();
   }
 
-  async signUp(payload: RegisterPayload): Promise<User | null> {
+  async Register(
+    payload: UserRegisterPayload
+  ): Promise<UserRegisterResponse | null> {
     try {
-      const res: AxiosResponse<User> = await axios.post(
-        `${this.baseUrl}users/register`,
+      const res: AxiosResponse<UserRegisterResponse> = await axios.post(
+        `${this.baseUrl}/api/users/register`,
         payload
       );
+      if (res.status === 200) {
+        const user = {
+          _id: res.data._id as unknown as Types.ObjectId,
+          name: res.data.name,
+          email: res.data.email,
+          profilePictureUrl: res.data.profilePictureUrl,
+          households: res.data.households,
+        };
+        this.setAuth(res.data.token, user, null);
+      }
       return res.data;
     } catch (error) {
       console.error("Signup failed:", error);
@@ -72,17 +89,80 @@ export class AuthStore {
     }
   }
 
-  async loginUser(payload: LoginPayload): Promise<User | null> {
+  async loginUser(
+    payload: UserLoginPayload
+  ): Promise<UserLoginResponse | null> {
     try {
-      const res: AxiosResponse<{ user: User; token: string }> =
-        await axios.post(`${this.baseUrl}users/login`, payload);
+      const res: AxiosResponse<UserLoginResponse> = await axios.post(
+        `${this.baseUrl}/api/users/login`,
+        payload
+      );
       const userData = res.data;
-      runInAction(() => {
-        this.setAuth(userData.token, userData.user, payload.role);
-      });
-      return userData.user;
+      if (res.status === 200) {
+        const user = {
+          _id: userData._id as unknown as Types.ObjectId,
+          name: userData.name,
+          email: userData.email,
+          profilePictureUrl: userData.profilePictureUrl,
+          households: userData.households,
+        };
+        if (userData.households.length > 0) {
+          this.setAuth(userData.token, user, userData.households[0].role);
+        } else {
+          this.setAuth(userData.token, user, null);
+        }
+      }
+      return userData;
     } catch (error) {
       console.error("Login failed:", error);
+      return null;
+    }
+  }
+
+  async getUsers(searchQuery?: string): Promise<User[]> {
+    try {
+      const queryParams = searchQuery ? `?search=${searchQuery}` : "";
+      const res: AxiosResponse<User[]> = await axios.post(
+        `${this.baseUrl}/api/users/allUsers${queryParams}`,
+        {
+          userId: this.user?._id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+          },
+        }
+      );
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return [];
+    }
+  }
+
+  async gerUserProfile(): Promise<User | null> {
+    try {
+      if (!this.token) {
+        throw new Error("No token found");
+      }
+      const res: AxiosResponse<User> = await axios.post(
+        `${this.baseUrl}/api/users/profile`,
+        {
+          userId: this.user?._id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+          },
+        }
+      );
+      runInAction(() => {
+        this.user = res.data;
+        this.setAuth(this.token!, this.user, this.role);
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
       return null;
     }
   }

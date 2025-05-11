@@ -6,21 +6,25 @@ import {
   createStyles,
   Drawer,
   Group,
-  Indicator,
   Menu,
   Stack,
+  Text,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import socket from "../../utils/socket";
+
+import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useStore } from "../../hooks/use-store";
 import { getImage } from "../../utils/image-map";
+import { notifications } from "@mantine/notifications";
 
 const useStyles = createStyles((theme) => ({
   navbar: {
     display: "flex",
+    maxHeight: "55px",
     justifyContent: "space-between",
     alignItems: "center",
     width: "100vw",
@@ -28,10 +32,13 @@ const useStyles = createStyles((theme) => ({
     position: "sticky",
     top: 0,
     zIndex: 100,
-    background: `linear-gradient(to right, ${theme.fn.rgba(
-      theme.colors.dark[6],
-      0.9
-    )}, ${theme.fn.rgba(theme.colors.dark[4], 0.9)})`,
+    background: `linear-gradient(
+  45deg,
+  ${theme.fn.rgba(theme.colors.violet[5], 0.93)},
+  ${theme.fn.rgba(theme.colors.indigo[6], 0.93)},
+  ${theme.fn.rgba(theme.colors.indigo[6], 0.93)}
+ 
+)`,
     backdropFilter: "blur(12px)",
     WebkitBackdropFilter: "blur(12px)",
     borderBottom: `1px solid ${theme.fn.rgba(theme.colors.gray[9], 0.2)}`,
@@ -49,36 +56,41 @@ export const NavBar = observer(function NavBar() {
   const navigate = useNavigate();
 
   const isLoggedIn = authStore.IsAuthenticated;
-  const userRole = authStore.Role;
 
-  const founderLinks = [
-    { label: "Dashboard", href: "/founder/dashboard" },
-    { label: "Funding Simulation", href: "/founder/funding-simulation" },
-    { label: "Leaderboard", href: "/leaderboard" },
+  const loginLink = [
+    { label: "Login", href: "/login" },
+    { label: "Register", href: "/register" },
   ];
-
-  const investorLinks = [
-    { label: "Explore Startups", href: "/investor/browse" },
-    { label: "Pitch Rooms", href: "/investor/pitch-room/:roomId" },
-    { label: "Leaderboard", href: "/leaderboard" },
+  const logoutLink = [
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+    },
+    {
+      label: "Logout",
+      href: "/",
+    },
   ];
-
-  const publicLinks = [{ label: "Login", href: "/login" }];
 
   const getLinks = () => {
-    if (!isLoggedIn) return isMobile ? publicLinks : [];
-    return userRole === "founder" ? founderLinks : investorLinks;
+    return isLoggedIn ? logoutLink : loginLink;
   };
 
   const items = getLinks().map((link) => (
     <Button
       key={link.label}
-      variant="subtle"
+      variant="white"
+      h={30}
       color={active === link.label ? "blue" : "gray"}
       onClick={() => {
-        setActive(link.label);
-        close();
-        navigate(link.href);
+        if (link.label === "Logout") {
+          authStore.logout();
+          navigate(link.href);
+        } else {
+          setActive(link.label);
+          close();
+          navigate(link.href);
+        }
       }}
       component="a"
     >
@@ -86,19 +98,67 @@ export const NavBar = observer(function NavBar() {
     </Button>
   ));
 
+  const handleLogout = () => {
+    authStore.logout();
+    notifications.show({
+      title: "Logged out",
+      message: "You have been logged out",
+      color: "green",
+    });
+    navigate("/");
+  };
+
   return (
     <Container fluid px="md" py="sm" className={classes.navbar}>
       <img
         src={getImage("logo")}
         alt="Logo"
         onClick={() => navigate("/")}
-        style={{ cursor: "pointer", width: "50px", height: "50px" }}
+        style={{
+          objectFit: "cover",
+          cursor: "pointer",
+          width: "40px",
+          height: "40px",
+        }}
       />
 
       {!isMobile && (
         <Group spacing="md">
           {items}
-          {<AvatarPopover isLoggedIn={isLoggedIn} />}
+          {isLoggedIn && (
+            <Menu position="bottom-end" shadow="md" withArrow withinPortal>
+              <Menu.Target>
+                <Avatar
+                  radius="xl"
+                  size="md"
+                  src={authStore.User?.profilePictureUrl || undefined}
+                  style={{ cursor: "pointer" }}
+                >
+                  {authStore.User?.name?.charAt(0) || "U"}
+                </Avatar>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item>
+                  <Stack spacing={0}>
+                    <Text size="sm" weight={500}>
+                      {authStore.User?.name}
+                    </Text>
+                    <Text size="xs" color="dimmed">
+                      {authStore.User?.email}
+                    </Text>
+                  </Stack>
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  icon={<FontAwesomeIcon icon={faSignOutAlt} />}
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          )}
         </Group>
       )}
 
@@ -116,16 +176,32 @@ export const NavBar = observer(function NavBar() {
           >
             <Stack spacing="md" align="center">
               {isLoggedIn && (
-                <Avatar color="blue" radius="xl">
-                  {authStore.User != null ? (
-                    <img
-                      src={authStore.User?.profilePictureUrl}
-                      alt="Profile"
-                    />
-                  ) : (
-                    "A"
-                  )}
-                </Avatar>
+                <Menu position="bottom-end" shadow="md">
+                  <Menu.Target>
+                    <Avatar
+                      radius="xl"
+                      size="md"
+                      src={authStore.User?.profilePictureUrl || undefined}
+                    >
+                      {authStore.User?.name?.charAt(0) || "U"}
+                    </Avatar>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item>
+                      <Text size="sm" color="dimmed">
+                        {authStore.User?.email}
+                      </Text>
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item
+                      color="red"
+                      icon={<FontAwesomeIcon icon={faSignOutAlt} />}
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
               )}
               {items}
             </Stack>
@@ -133,80 +209,5 @@ export const NavBar = observer(function NavBar() {
         </>
       )}
     </Container>
-  );
-});
-
-const AvatarPopover = observer(function AvatarPopover({
-  isLoggedIn,
-}: {
-  isLoggedIn: boolean;
-}) {
-  const navigate = useNavigate();
-  const { authStore } = useStore();
-
-  const handleLogOut = async () => {
-    await authStore.logout();
-    await socket.disconnect();
-    navigate("/login");
-  };
-
-  return (
-    <Menu width={150} withArrow>
-      <Menu.Target>
-        <Group spacing="md">
-          <NavAvatar />
-        </Group>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Stack>
-          {isLoggedIn && (
-            <Button
-              fullWidth
-              variant="subtle"
-              onClick={() => navigate("/profile")}
-            >
-              Profile
-            </Button>
-          )}
-          {isLoggedIn ? (
-            <Button fullWidth variant="subtle" onClick={handleLogOut}>
-              Logout
-            </Button>
-          ) : (
-            <>
-              <Button
-                fullWidth
-                variant="subtle"
-                onClick={() => navigate("/login")}
-              >
-                Login
-              </Button>
-              <Button
-                fullWidth
-                variant="subtle"
-                onClick={() => navigate("/register")}
-              >
-                Register
-              </Button>
-            </>
-          )}
-        </Stack>
-      </Menu.Dropdown>
-    </Menu>
-  );
-});
-
-const NavAvatar = observer(function NavAvatar() {
-  const notificationsCount = 0;
-  return (
-    <Indicator
-      size={8}
-      offset={3}
-      disabled={notificationsCount === 0}
-      color="red"
-      label={notificationsCount > 0 ? notificationsCount.toString() : ""}
-    >
-      <Avatar radius="xl" />
-    </Indicator>
   );
 });

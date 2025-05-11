@@ -14,6 +14,9 @@
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "@fullcalendar/daygrid": "^6.1.17",
+    "@fullcalendar/interaction": "^6.1.17",
+    "@fullcalendar/react": "^6.1.17",
     "@mantine/core": "^6.0.21",
     "@mantine/form": "^6.0.21",
     "@mantine/hooks": "^6.0.21",
@@ -33,11 +36,11 @@
     "react-dom": "^18.3.1",
     "react-pdf": "^9.2.1",
     "react-router-dom": "^6.30.0",
-    "recharts": "^2.15.3",
-    "socket.io-client": "^4.8.1"
+    "recharts": "^2.15.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
+    "@types/mongoose": "^5.11.96",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.3.4",

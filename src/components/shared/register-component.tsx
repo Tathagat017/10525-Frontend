@@ -1,14 +1,13 @@
+import { faImagePortrait } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Button,
   FileButton,
   Flex,
-  MultiSelect,
   Paper,
   Stack,
-  Switch,
   Text,
   TextInput,
-  Textarea,
   Title,
   createStyles,
 } from "@mantine/core";
@@ -17,20 +16,18 @@ import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../../hooks/use-store";
+import { uploadImageToCloudinary } from "../../utils/cloudinary-image-upload";
 import { getImage } from "../../utils/image-map";
 import { PasswordWithValidation } from "./password-with-validation";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faImagePortrait } from "@fortawesome/free-solid-svg-icons";
-import { uploadImageToCloudinary } from "../../utils/cloudinary-image-upload";
 
 const useStyles = createStyles((theme) => ({
   container: {
     width: "100%",
-    height: "100vh",
+    height: "100%",
     backgroundColor: theme.colors.dark[7],
     display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "flex-end",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundSize: "cover",
     backgroundPosition: "center",
     overflowY: "auto",
@@ -39,7 +36,7 @@ const useStyles = createStyles((theme) => ({
   formPaper: {
     width: 420,
     backdropFilter: "blur(10px)",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "rgba(255, 255, 255, 0.34)",
     borderRadius: theme.radius.md,
     padding: theme.spacing.xl,
     color: "white",
@@ -47,30 +44,19 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-const industries = ["Manufacturing", "IT", "Services", "Healthcare", "Finance"];
-
 export const RegisterComponent = observer(() => {
-  const { authStore, uiViewStore } = useStore();
+  const { authStore } = useStore();
   const navigate = useNavigate();
-  const userRole = uiViewStore.UserRoleForLogin;
-  const { classes } = useStyles();
-  const backgroundImage = getImage(
-    userRole === "founder" ? "login_founder" : "login_investor"
-  );
+
+  const { classes, theme } = useStyles();
+  const backgroundImage = getImage("register_background");
 
   // Common
-  const [fullName, setFullName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
   const [password, setPassword] = useState("");
   const [profilePic, setProfilePic] = useState<File | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState("");
-
-  // Founder-specific
-  const [startUpName, setStartUpName] = useState("");
-
-  // Investor-specific
-  const [industriesSelected, setIndustriesSelected] = useState<string[]>([]);
 
   // Errors
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -122,7 +108,7 @@ export const RegisterComponent = observer(() => {
   };
 
   const handleRegister = async () => {
-    const nameErr = validateName(fullName);
+    const nameErr = validateName(name);
     const emailErr = validateEmail(email);
     const passErr = password.length < 8 ? "Password too short" : null;
 
@@ -133,28 +119,21 @@ export const RegisterComponent = observer(() => {
     if (nameErr || emailErr || passErr) return;
 
     const commonPayload = {
-      fullName,
+      name,
       email,
-      bio,
       password,
       profilePictureUrl: profilePicUrl,
-      role: userRole,
     };
 
-    const payload =
-      userRole === "founder"
-        ? { ...commonPayload, startUpName: startUpName }
-        : { ...commonPayload, industriesInterestedIn: industriesSelected };
-
-    const success = await authStore.signUp(payload);
+    const success = await authStore.Register(commonPayload);
 
     if (success) {
       notifications.show({
         title: "Registration Successful",
-        message: `Succesfully registered as ${userRole}`,
+        message: `Succesfully registered as ${success.name}`,
         color: "green",
       });
-      navigate(`/login`);
+      navigate(`/dashboard`);
     } else {
       notifications.show({
         title: "Registration Failed",
@@ -171,36 +150,15 @@ export const RegisterComponent = observer(() => {
     >
       <Paper className={classes.formPaper}>
         <Stack spacing="xs">
-          <Title
-            order={2}
-            align="center"
-            color={userRole === "founder" ? "white" : "black"}
-          >
-            Registering as {userRole === "founder" ? "Founder" : "Investor"}
+          <Title order={2} align="center" color="black">
+            {"Register to your account"}
           </Title>
-
-          <Switch
-            checked={userRole === "founder"}
-            label={
-              <span
-                style={{ color: userRole === "founder" ? "white" : "black" }}
-              >
-                Register as Founder
-              </span>
-            }
-            onChange={(e) =>
-              uiViewStore.toggleUserRoleForLogin(
-                e.currentTarget.checked ? "founder" : "investor"
-              )
-            }
-          />
-
           <TextInput
             label="Full Name"
             size="xs"
-            value={fullName}
-            onChange={(e) => setFullName(e.currentTarget.value)}
-            onBlur={() => setNameError(validateName(fullName))}
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+            onBlur={() => setNameError(validateName(name))}
             error={nameError}
             required
           />
@@ -230,11 +188,7 @@ export const RegisterComponent = observer(() => {
           </Text>
           <Flex align="center" gap={8}>
             {profilePic && (
-              <Text
-                size="sm"
-                align="center"
-                color={userRole === "founder" ? "white" : "black"}
-              >
+              <Text size="sm" align="center" color={"white"}>
                 Picked file: {profilePic.name}
               </Text>
             )}
@@ -244,7 +198,7 @@ export const RegisterComponent = observer(() => {
                 setProfilePic(file);
                 const url = await handleFileUpload(file);
                 if (url) {
-                  setProfilePicUrl(url); // ✅ store Cloudinary URL in base64Image variable
+                  setProfilePicUrl(url);
                 }
               }}
               accept="image/png,image/jpeg"
@@ -266,43 +220,22 @@ export const RegisterComponent = observer(() => {
               )}
             </FileButton>
           </Flex>
-          <Textarea
-            size="xs"
-            label="Bio"
-            value={bio}
-            onChange={(e) => setBio(e.currentTarget.value)}
-            minRows={2}
-          />
 
-          {userRole === "founder" ? (
-            <TextInput
-              size="xs"
-              label="Startup Name"
-              value={startUpName}
-              onChange={(e) => setStartUpName(e.currentTarget.value)}
-            />
-          ) : (
-            <MultiSelect
-              size="xs"
-              label="Industries Interested In"
-              data={industries}
-              value={industriesSelected}
-              onChange={setIndustriesSelected}
-              placeholder="Select industries"
-              searchable
-            />
-          )}
           <Text
             size="sm"
             align="center"
             style={{
-              color: userRole === "founder" ? "white" : "black",
+              color: "black",
               marginTop: 8,
             }}
           >
             Already a user?{" "}
             <span
-              style={{ textDecoration: "underline", cursor: "pointer" }}
+              style={{
+                textDecoration: "underline",
+                cursor: "pointer",
+                color: theme.colors.blue[6],
+              }}
               onClick={() => navigate("/login")}
             >
               Login here
