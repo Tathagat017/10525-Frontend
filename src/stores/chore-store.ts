@@ -4,7 +4,6 @@ import { makeAutoObservable, runInAction } from "mobx";
 
 import { Types } from "mongoose";
 import { Chore, ChorePayload } from "../types/chore";
-import { User, UserHousehold } from "../types/user";
 
 export class ChoreStore {
   chores: Chore[] | null = null;
@@ -22,19 +21,6 @@ export class ChoreStore {
 
   private loadTokenFromLocalStorage(): string | null {
     return localStorage.getItem("auth_token") ?? null;
-  }
-
-  private loadUserFromLocalStorage(): User | null {
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
-  }
-
-  private mutateUserFromLocalStorage(houseHold: UserHousehold) {
-    const user = this.loadUserFromLocalStorage();
-    if (user) {
-      user.households.push(houseHold);
-      localStorage.setItem("user", JSON.stringify(user));
-    }
   }
 
   private get authHeaders() {

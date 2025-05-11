@@ -7,6 +7,7 @@ import { ChoreStore } from "./chore-store";
 
 const queryClient = new QueryClient();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const store = {
   authStore: new AuthStore(queryClient),
   householdStore: new HouseHoldStore(queryClient),
@@ -15,6 +16,7 @@ export const store = {
   queryClient,
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const StoreContext = createContext(store);
 
 export const StoreProvider = ({ children }: { children: ReactNode }) => (
