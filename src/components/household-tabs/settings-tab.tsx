@@ -26,11 +26,13 @@ const SettingsTab = observer(
     const navigate = useNavigate();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isUnjoinModalOpen, setIsUnjoinModalOpen] = useState(false);
-
+    const [loading, setLoading] = useState(false);
+    const [leaveLoading, setLeaveLoading] = useState(false);
     const isOwner = authStore.user?._id.toString() === ownerId.toString();
 
     const handleDeleteHousehold = async () => {
       try {
+        setLoading(true);
         await householdStore.deleteHousehold(
           householdId as unknown as Types.ObjectId
         );
@@ -47,11 +49,14 @@ const SettingsTab = observer(
           message: "Please try again",
           color: "red",
         });
+      } finally {
+        setLoading(false);
       }
     };
 
     const handleUnjoinHousehold = async () => {
       try {
+        setLeaveLoading(true);
         await householdStore.removeSelfFromHousehold(
           householdId as unknown as Types.ObjectId
         );
@@ -68,6 +73,8 @@ const SettingsTab = observer(
           message: "Please try again",
           color: "red",
         });
+      } finally {
+        setLeaveLoading(false);
       }
     };
 
@@ -127,7 +134,11 @@ const SettingsTab = observer(
               >
                 Cancel
               </Button>
-              <Button color="red" onClick={handleDeleteHousehold}>
+              <Button
+                loading={loading}
+                color="red"
+                onClick={handleDeleteHousehold}
+              >
                 Delete
               </Button>
             </Group>
@@ -153,7 +164,11 @@ const SettingsTab = observer(
               >
                 Cancel
               </Button>
-              <Button color="red" onClick={handleUnjoinHousehold}>
+              <Button
+                loading={leaveLoading}
+                color="red"
+                onClick={handleUnjoinHousehold}
+              >
                 Leave
               </Button>
             </Group>
