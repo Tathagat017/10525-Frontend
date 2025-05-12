@@ -82,7 +82,12 @@ const MemberTab = observer(
     };
 
     if (owner) {
-      members = [...members, owner];
+      const houseHoldOwnerPresent = members.find(
+        (mem) => mem._id.toString() === owner._id.toString()
+      );
+      if (!houseHoldOwnerPresent) {
+        members.push(owner);
+      }
     }
     return (
       <Stack spacing="md">

@@ -8,7 +8,7 @@ import { useStore } from "../../hooks/use-store";
 import "../../styles/date-picker.css";
 import { ChoreFrequency, ChorePayload } from "../../types/chore";
 import { User } from "../../types/user";
-
+import { useState } from "react";
 const CreateChoreModal = observer(function CreateChoreModal({
   householdId,
   members,
@@ -19,7 +19,7 @@ const CreateChoreModal = observer(function CreateChoreModal({
   householdOwner: User;
 }) {
   const { uiViewStore, choreStore } = useStore();
-
+  const [loading, setLoading] = useState(false);
   const form = useForm<ChorePayload>({
     initialValues: {
       householdId: householdId as unknown as Types.ObjectId,
@@ -40,11 +40,22 @@ const CreateChoreModal = observer(function CreateChoreModal({
   };
 
   const handleSubmit = async (values: ChorePayload) => {
+    setLoading(true);
     try {
-      await choreStore.createChore(values);
+      // Convert string ID to ObjectId if assignedTo exists
+      const payload = {
+        ...values,
+        assignedTo: values.assignedTo
+          ? new Types.ObjectId(values.assignedTo)
+          : undefined,
+      };
+
+      await choreStore.createChore(payload);
       handleClose();
     } catch (error) {
       console.error("Error creating chore:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -126,7 +137,9 @@ const CreateChoreModal = observer(function CreateChoreModal({
             <Button variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit">Create Chore</Button>
+            <Button type="submit" loading={loading}>
+              Create Chore
+            </Button>
           </Group>
         </Stack>
       </form>

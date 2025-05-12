@@ -120,6 +120,29 @@ export class ChoreStore {
     }
   }
 
+  async deleteChore(id: Types.ObjectId) {
+    try {
+      if (!this.authHeaders) {
+        throw new Error("No auth headers available");
+      }
+      const { data } = await axios.post<Chore>(
+        `${this.baseUrl}/api/chores/delete/${id}`,
+        { id },
+        this.authHeaders
+      );
+      runInAction(() => {
+        if (data) {
+          this.chores = this.chores?.filter((chore) => chore._id !== id) ?? [];
+          this.queryClient.invalidateQueries({ queryKey: ["chores"] });
+        }
+      });
+      return data;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      return null;
+    }
+  }
+
   clearStore() {
     this.chores = null;
   }

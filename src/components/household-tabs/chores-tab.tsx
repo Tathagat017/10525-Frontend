@@ -5,7 +5,9 @@ import {
   faClock,
   faHistory,
   faHourglassEnd,
+  faQuestionCircle,
   faRedo,
+  faTrash,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,6 +20,7 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useQuery } from "@tanstack/react-query";
@@ -81,6 +84,29 @@ const ChoresTab = observer(
           message: "The chore was not marked as complete",
           color: "red",
         });
+      }
+    };
+
+    const handleChoreDelete = async (choreId: string) => {
+      try {
+        const result = await choreStore.deleteChore(
+          choreId as unknown as Types.ObjectId
+        );
+        if (result) {
+          notifications.show({
+            title: "Chore deleted",
+            message: "The chore has been successfully deleted",
+            color: "green",
+          });
+        } else {
+          notifications.show({
+            title: "Error deleting chore",
+            message: "Failed to delete the chore",
+            color: "red",
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting chore:", error);
       }
     };
 
@@ -160,15 +186,45 @@ const ChoresTab = observer(
                       </Text>
                     </Group>
                   </Box>
-                  <Button
-                    size="xs"
-                    variant="light"
-                    color="green"
-                    onClick={() => markAsComplete(chore._id.toString())}
-                    leftIcon={<FontAwesomeIcon icon={faCheck} />}
-                  >
-                    Mark as Complete
-                  </Button>
+                  <Group spacing="xs">
+                    {chore.assignedTo ? (
+                      chore.assignedTo._id.toString() ===
+                      authStore.user?._id.toString() ? (
+                        <Button
+                          size="xs"
+                          variant="light"
+                          color="green"
+                          onClick={() => markAsComplete(chore._id.toString())}
+                          leftIcon={<FontAwesomeIcon icon={faCheck} />}
+                        >
+                          Mark as Complete
+                        </Button>
+                      ) : (
+                        <Tooltip label="Only assigned member can mark as completed">
+                          <FontAwesomeIcon
+                            icon={faQuestionCircle}
+                            style={{ color: "gray", cursor: "help" }}
+                          />
+                        </Tooltip>
+                      )
+                    ) : null}
+                    {authStore.user?._id.toString() ===
+                      householdOwner._id.toString() && (
+                      <Tooltip label="Delete chore">
+                        <Button
+                          size="xs"
+                          variant="light"
+                          color="red"
+                          onClick={() =>
+                            handleChoreDelete(chore._id.toString())
+                          }
+                          leftIcon={<FontAwesomeIcon icon={faTrash} />}
+                        >
+                          Delete
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </Group>
                 </Group>
               </Paper>
             ))
