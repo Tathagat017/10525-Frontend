@@ -163,7 +163,7 @@ const InviteMemberModal = observer(
               Cancel
             </Button>
             <Button onClick={handleInvite} loading={loading}>
-              Send Invites
+              Send Email Invites
             </Button>
           </Group>
         </Stack>
